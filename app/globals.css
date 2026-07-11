@@ -658,6 +658,17 @@ button { color: inherit; font: inherit; }
 .quick-sidebar nav { padding-left: .55rem; }
 .quick-sidebar nav a, .quick-sidebar .quick-stat { position: relative; border-left: 1px solid rgba(255,255,255,.06); padding-left: .6rem; transition: border-color .2s ease, color .2s ease, transform .2s ease; }
 .quick-sidebar nav a:hover, .quick-sidebar nav a.quick-link-active { border-left-color: var(--accent-soft); transform: translateX(3px); }
+.quick-sidebar-line { border: 1px solid rgba(255,255,255,.1); border-radius: .85rem; background: rgba(8,6,14,.72); padding: 1.1rem 1rem .45rem 0; }
+.quick-sidebar-line::before { inset: 3.35rem auto .45rem 1rem; background: linear-gradient(180deg, rgba(192,132,252,.85), rgba(192,132,252,.12)); }
+.quick-sidebar-line .quick-sidebar-head { display:flex; align-items:center; justify-content:space-between; margin-left:1rem; padding: 0 0 .9rem .2rem; border-bottom: 1px solid rgba(255,255,255,.1); color:var(--accent-pale); font-size:.72rem; }
+.quick-sidebar-line .quick-sidebar-head svg { color:var(--accent-soft); }
+.quick-sidebar-line nav { display:grid; gap:0; padding: .2rem 0 0 1rem; }
+.quick-sidebar-line nav a, .quick-sidebar-line .quick-stat { min-height: 43px; border-left:0; border-bottom:1px solid rgba(255,255,255,.1); padding:0 .55rem .0 .65rem; }
+.quick-sidebar-line nav a > span, .quick-sidebar-line .quick-stat > span { color:var(--dim); font-size:.74rem; }
+.quick-sidebar-line nav a > svg { color:var(--dim); }
+.quick-sidebar-line nav a:hover, .quick-sidebar-line nav a.quick-link-active { border-left:2px solid var(--accent-soft); background:rgba(168,85,247,.06); color:var(--ink); transform:none; }
+.quick-sidebar-line nav a.quick-link-active > span { color:var(--ink); font-weight:550; }
+.quick-sidebar-line .quick-stat strong { color:var(--accent-pale); font-size:.75rem; }
 .filter-status { justify-self: end; color: var(--success); font-family: "Geist Mono", monospace; font-size: .65rem; white-space: nowrap; }
 .results-count { margin: 0 0 .6rem; color: var(--dim); font-family: "Geist Mono", monospace; font-size: .65rem; }
 .dense-log-row { display: grid; grid-template-columns: 135px minmax(0, 1fr) 32px; gap: 1rem; border-top: 1px solid var(--line); padding: 1.1rem 0; transition: background .2s ease, padding .2s ease; }
