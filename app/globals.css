@@ -640,6 +640,24 @@ button { color: inherit; font: inherit; }
 .projects-toolbar select:focus-visible, .logs-toolbar select:focus-visible { border-color: var(--accent); background-color: rgba(34,21,52,.98); color: var(--ink); box-shadow: 0 0 0 3px rgba(168,85,247,.16), 0 8px 24px rgba(0,0,0,.22); animation: filterSelectFocus .22s ease-out; }
 .projects-toolbar select option, .logs-toolbar select option { background: #171022; color: #f7f0ff; padding: .6rem; }
 @keyframes filterSelectFocus { from { transform: scale(.98); } to { transform: scale(1); } }
+.animated-filter { position: relative; min-width: 145px; z-index: 5; }
+.animated-filter-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 42px; border: 1px solid rgba(168,85,247,.24); border-radius: .7rem; background: rgba(18,13,28,.9); padding: .45rem .8rem; color: var(--muted); text-align: left; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.035); transition: border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease; }
+.animated-filter-trigger span { display: grid; gap: .12rem; min-width: 0; }
+.animated-filter-trigger small { color: var(--dim); font-size: .56rem; line-height: 1; }
+.animated-filter-trigger strong { overflow: hidden; color: var(--ink); font-size: .72rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.animated-filter-trigger > svg { flex: 0 0 auto; color: var(--accent-soft); transition: transform .2s ease; }
+.animated-filter:hover .animated-filter-trigger, .animated-filter.is-open .animated-filter-trigger { border-color: rgba(192,132,252,.62); background: rgba(28,18,42,.96); box-shadow: 0 0 0 3px rgba(168,85,247,.1), 0 8px 20px rgba(0,0,0,.18); transform: translateY(-1px); }
+.animated-filter.is-open .animated-filter-trigger > svg { transform: rotate(180deg); }
+.animated-filter-menu { position: absolute; top: calc(100% + .4rem); left: 0; right: 0; overflow: hidden; border: 1px solid rgba(192,132,252,.35); border-radius: .7rem; background: rgba(19,13,30,.98); padding: .3rem; box-shadow: 0 18px 40px rgba(0,0,0,.42), 0 0 22px rgba(168,85,247,.12); transform-origin: top center; }
+.animated-filter-menu button { display: flex; align-items: center; justify-content: space-between; width: 100%; border: 0; border-radius: .45rem; background: transparent; padding: .58rem .65rem; color: var(--muted); font: inherit; font-size: .72rem; text-align: left; cursor: pointer; transition: color .16s ease, background .16s ease, padding-left .16s ease; }
+.animated-filter-menu button:hover, .animated-filter-menu button[aria-selected="true"] { background: rgba(168,85,247,.14); color: var(--ink); padding-left: .8rem; }
+.animated-filter-menu button[aria-selected="true"] svg { color: var(--accent-soft); }
+.quick-sidebar { position: relative; overflow: hidden; border-radius: .7rem; }
+.quick-sidebar::before { content: ""; position: absolute; inset: .45rem auto .45rem 0; width: 1px; background: linear-gradient(180deg, transparent, rgba(192,132,252,.75) 18%, rgba(192,132,252,.18) 82%, transparent); }
+.quick-sidebar-head { padding-left: 1.1rem; }
+.quick-sidebar nav { padding-left: .55rem; }
+.quick-sidebar nav a, .quick-sidebar .quick-stat { position: relative; border-left: 1px solid rgba(255,255,255,.06); padding-left: .6rem; transition: border-color .2s ease, color .2s ease, transform .2s ease; }
+.quick-sidebar nav a:hover, .quick-sidebar nav a.quick-link-active { border-left-color: var(--accent-soft); transform: translateX(3px); }
 .filter-status { justify-self: end; color: var(--success); font-family: "Geist Mono", monospace; font-size: .65rem; white-space: nowrap; }
 .results-count { margin: 0 0 .6rem; color: var(--dim); font-family: "Geist Mono", monospace; font-size: .65rem; }
 .dense-log-row { display: grid; grid-template-columns: 135px minmax(0, 1fr) 32px; gap: 1rem; border-top: 1px solid var(--line); padding: 1.1rem 0; transition: background .2s ease, padding .2s ease; }
@@ -828,4 +846,7 @@ mark { border-radius: .2rem; background: rgba(192,132,252,.24); color: var(--acc
   .architecture-diagram > svg { transform:rotate(90deg); justify-self:center; }
   .architecture-line { gap:.5rem; flex-wrap:wrap; }
   .detail-tech-grid { grid-template-columns:repeat(2,1fr); }
+  .projects-toolbar { grid-template-columns: 1fr 1fr; }
+  .animated-filter { min-width: 0; }
+  .animated-filter-menu { position: fixed; left: 1rem; right: 1rem; top: auto; margin-top: .4rem; }
 }
