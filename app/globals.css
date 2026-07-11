@@ -669,6 +669,19 @@ button { color: inherit; font: inherit; }
 .quick-sidebar-line nav a:hover, .quick-sidebar-line nav a.quick-link-active { border-left:2px solid var(--accent-soft); background:rgba(168,85,247,.06); color:var(--ink); transform:none; }
 .quick-sidebar-line nav a.quick-link-active > span { color:var(--ink); font-weight:550; }
 .quick-sidebar-line .quick-stat strong { color:var(--accent-pale); font-size:.75rem; }
+.quick-sidebar-line { overflow: visible; padding: 1.1rem 1rem .55rem 0; }
+.quick-sidebar-line::before { display: none; }
+.quick-sidebar-line nav { position: relative; padding: .45rem 0 .25rem 1.05rem; }
+.quick-sidebar-line nav::before { content:""; position:absolute; left:1.05rem; top:.55rem; bottom:.45rem; width:1px; background:rgba(192,132,252,.24); }
+.quick-sidebar-line .line-sidebar-item { position:relative; display:flex; align-items:center; gap:.45rem; min-height:43px; border:0; border-bottom:1px solid rgba(255,255,255,.1); padding:0 .5rem 0 1.05rem; color:var(--dim); font-size:.72rem; text-decoration:none; transition:color .18s ease, background .18s ease; }
+.quick-sidebar-line .line-sidebar-item:last-child { border-bottom:0; }
+.quick-sidebar-line .line-sidebar-item:hover, .quick-sidebar-line .line-sidebar-item.quick-link-active { background:rgba(168,85,247,.07); color:var(--ink); }
+.line-sidebar-marker { position:absolute; left:-.02rem; width:1px; height:22px; background:var(--accent-soft); transform-origin:center; transition:transform .1s ease, opacity .1s ease; }
+.line-sidebar-index { width:20px; color:rgba(192,132,252,.62); font-family:"Geist Mono",monospace; font-size:.57rem; }
+.line-sidebar-label { min-width:0; flex:1; transition:transform .1s ease, color .18s ease; }
+.line-sidebar-value { color:var(--accent-pale); font-size:.72rem; font-weight:550; }
+.line-sidebar-arrow { color:var(--dim); transition:transform .18s ease, color .18s ease; }
+.line-sidebar-item:hover .line-sidebar-arrow { color:var(--accent-soft); transform:translateX(3px); }
 .filter-status { justify-self: end; color: var(--success); font-family: "Geist Mono", monospace; font-size: .65rem; white-space: nowrap; }
 .results-count { margin: 0 0 .6rem; color: var(--dim); font-family: "Geist Mono", monospace; font-size: .65rem; }
 .dense-log-row { display: grid; grid-template-columns: 135px minmax(0, 1fr) 32px; gap: 1rem; border-top: 1px solid var(--line); padding: 1.1rem 0; transition: background .2s ease, padding .2s ease; }
