@@ -682,6 +682,20 @@ button { color: inherit; font: inherit; }
 .line-sidebar-value { color:var(--accent-pale); font-size:.72rem; font-weight:550; }
 .line-sidebar-arrow { color:var(--dim); transition:transform .18s ease, color .18s ease; }
 .line-sidebar-item:hover .line-sidebar-arrow { color:var(--accent-soft); transform:translateX(3px); }
+/* Exact Line Sidebar presentation: bare numbered list, no card chrome */
+.quick-sidebar-line { width: 100%; min-width: 220px; border: 0; border-radius: 0; background: transparent; padding: 0; }
+.quick-sidebar-line .quick-sidebar-head { display: none; }
+.quick-sidebar-line nav { display: grid; gap: 0; padding: 0; }
+.quick-sidebar-line nav::before { display: none; }
+.quick-sidebar-line .line-sidebar-item { display: grid; grid-template-columns: 74px 30px minmax(0,1fr) auto; align-items: center; min-height: 55px; gap: 0; border: 0; padding: 0; background: transparent; }
+.quick-sidebar-line .line-sidebar-item:hover, .quick-sidebar-line .line-sidebar-item.quick-link-active { background: transparent; }
+.quick-sidebar-line .line-sidebar-marker { position: relative; left: auto; width: 52px; height: 1px; margin-left: 0; background: rgba(210,210,220,.45); transform-origin: left center !important; opacity: 1 !important; }
+.quick-sidebar-line .line-sidebar-marker::after { content: ""; position: absolute; left: 0; top: 9px; width: 27px; height: 1px; background: inherit; }
+.quick-sidebar-line .line-sidebar-item:hover .line-sidebar-marker, .quick-sidebar-line .line-sidebar-item.quick-link-active .line-sidebar-marker { background: var(--accent-soft); }
+.quick-sidebar-line .line-sidebar-index { width: auto; color: rgba(190,190,205,.58); font-size: .75rem; }
+.quick-sidebar-line .line-sidebar-label { color: rgba(225,222,235,.82); font-size: 1.08rem; font-weight: 500; letter-spacing: -.03em; transition: transform .14s ease, color .14s ease; }
+.quick-sidebar-line .line-sidebar-item:hover .line-sidebar-label, .quick-sidebar-line .line-sidebar-item.quick-link-active .line-sidebar-label { color: var(--accent-pale) !important; }
+.quick-sidebar-line .line-sidebar-value, .quick-sidebar-line .line-sidebar-arrow { display: none; }
 .filter-status { justify-self: end; color: var(--success); font-family: "Geist Mono", monospace; font-size: .65rem; white-space: nowrap; }
 .results-count { margin: 0 0 .6rem; color: var(--dim); font-family: "Geist Mono", monospace; font-size: .65rem; }
 .dense-log-row { display: grid; grid-template-columns: 135px minmax(0, 1fr) 32px; gap: 1rem; border-top: 1px solid var(--line); padding: 1.1rem 0; transition: background .2s ease, padding .2s ease; }
