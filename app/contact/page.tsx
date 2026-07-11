@@ -1,3 +1,16 @@
+import { ArrowUpRightIcon, GithubLogoIcon } from "@phosphor-icons/react/ssr";
+import Link from "next/link";
+import { Reveal } from "../components/Reveal";
 import { Container, SectionHeading } from "../components/SiteShell";
+
 export const metadata = { title: "联系", description: "联系 Flower ZC，查看公开项目与 GitHub。" };
-export default function ContactPage() { return <div className="py-36 md:py-44"><Container><SectionHeading eyebrow="Contact" title="如果你也在\n把东西做成系统。" description="欢迎从公开项目或 GitHub 开始了解。暂时不放虚假的提交表单，联系入口保持简单和真实。" /><div className="grid gap-4 md:grid-cols-3"><a href="https://github.com/flowerzc" target="_blank" rel="noreferrer" className="glass group rounded-[1.5rem] p-6 transition hover:-translate-y-1"><p className="eyebrow">GitHub</p><p className="mt-8 text-lg text-white/85">github.com/flowerzc</p><p className="mt-2 text-sm text-muted">公开代码与项目入口</p><span className="mt-8 block text-white/55 transition group-hover:text-white">访问 ↗</span></a><div className="glass rounded-[1.5rem] p-6"><p className="eyebrow">Email</p><p className="mt-8 text-lg text-white/85">暂未公开</p><p className="mt-2 text-sm text-muted">后续会在这里补充稳定的联系地址。</p></div><div className="glass rounded-[1.5rem] p-6"><p className="eyebrow">当前公开项目</p><p className="mt-8 text-lg text-white/85">{["Hermes Agent", "Dev Infrastructure"].join(" · ")}</p><p className="mt-2 text-sm text-muted">先从项目页面了解我在做什么。</p></div></div></Container></div>; }
+
+export default function ContactPage() {
+  return <div className="page-shell"><Container>
+    <SectionHeading eyebrow="Contact" title={"如果你也在，\n把想法做成系统。"} description="公开代码、项目与开发日志是最好的介绍。联系入口保持简单，不放无效表单。" />
+    <Reveal className="contact-panel">
+      <a href="https://github.com/flowerzc" target="_blank" rel="noreferrer"><GithubLogoIcon size={26} /><span><small>GitHub</small>github.com/flowerzc</span><ArrowUpRightIcon size={22} /></a>
+      <Link href="/projects"><span><small>从这里开始</small>查看公开项目</span><ArrowUpRightIcon size={22} /></Link>
+    </Reveal>
+  </Container></div>;
+}

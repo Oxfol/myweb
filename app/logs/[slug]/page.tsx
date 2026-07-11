@@ -1,8 +1,50 @@
 import Link from "next/link";
+import { ArrowLeftIcon, ArrowRightIcon, ClockIcon } from "@phosphor-icons/react/ssr";
 import { notFound } from "next/navigation";
-import { Container } from "../../components/SiteShell";
+import { ArticleExperience, type ArticleHeading } from "../../components/ArticleExperience";
 import { MarkdownRenderer } from "../../components/MarkdownRenderer";
+import { Container, TechBadge } from "../../components/SiteShell";
 import { getLog, logs } from "../../data/logs";
+
 export function generateStaticParams() { return logs.map(log => ({ slug: log.slug })); }
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) { const log = getLog((await params).slug); return { title: log?.title || "日志", description: log?.summary }; }
-export default async function LogDetail({ params }: { params: Promise<{ slug: string }> }) { const log = getLog((await params).slug); if (!log) notFound(); const index = logs.findIndex(item => item.slug === log.slug); const previous = logs[index + 1]; const next = logs[index - 1]; return <div className="py-36 md:py-44"><Container><Link href="/logs" className="text-sm text-white/50 hover:text-white">← 返回日志</Link><header className="mt-10 max-w-3xl"><div className="flex items-center gap-3 text-xs text-dim"><time dateTime={log.date}>{log.date}</time><span>·</span><span>{log.readingTime}</span></div><h1 className="display mt-5 text-5xl leading-none text-white md:text-7xl">{log.title}</h1><p className="mt-6 text-lg leading-8 text-muted">{log.summary}</p></header><article className="mt-16 max-w-3xl"><MarkdownRenderer content={log.content} /></article><nav className="mt-16 flex flex-col justify-between gap-4 border-t border-white/10 pt-6 text-sm sm:flex-row"><div>{previous && <Link href={`/logs/${previous.slug}`} className="text-white/60 hover:text-white">← {previous.title}</Link>}</div><div>{next && <Link href={`/logs/${next.slug}`} className="text-white/60 hover:text-white">{next.title} →</Link>}</div></nav></Container></div>; }
+
+function getHeadings(content: string): ArticleHeading[] {
+  const used = new Map<string, number>();
+  return content.split("\n").flatMap(line => {
+    const match = line.match(/^(##|###)\s+(.+)$/);
+    if (!match) return [];
+    const label = match[2].trim();
+    const base = label.toLowerCase().replace(/[^\p{Letter}\p{Number}]+/gu, "-").replace(/^-|-$/g, "") || "section";
+    const count = used.get(base) || 0;
+    used.set(base, count + 1);
+    return [{ id: count ? `${base}-${count + 1}` : base, label, level: match[1] === "###" ? 3 : 2 } as ArticleHeading];
+  });
+}
+
+export default async function LogDetail({ params }: { params: Promise<{ slug: string }> }) {
+  const log = getLog((await params).slug);
+  if (!log) notFound();
+  const index = logs.findIndex(item => item.slug === log.slug);
+  const previous = logs[index + 1];
+  const next = logs[index - 1];
+  const headings = getHeadings(log.content);
+  return (
+    <div className="page-shell article-page">
+      <Container>
+        <Link href="/logs" className="back-link"><ArrowLeftIcon size={16} />返回日志</Link>
+        <header className="article-header">
+          <div className="article-meta"><time dateTime={log.date}>{log.date}</time><span><ClockIcon size={14} />{log.readingTime}</span></div>
+          <h1>{log.title}</h1>
+          <p>{log.summary}</p>
+          <div className="log-tags">{log.tags.map(tag => <TechBadge key={tag}>{tag}</TechBadge>)}</div>
+        </header>
+        <ArticleExperience headings={headings}><MarkdownRenderer content={log.content} /></ArticleExperience>
+        <nav className="article-pagination" aria-label="日志翻页">
+          <div>{previous && <Link href={`/logs/${previous.slug}`}><ArrowLeftIcon size={16} /><span><small>上一篇</small>{previous.title}</span></Link>}</div>
+          <div>{next && <Link href={`/logs/${next.slug}`}><span><small>下一篇</small>{next.title}</span><ArrowRightIcon size={16} /></Link>}</div>
+        </nav>
+      </Container>
+    </div>
+  );
+}

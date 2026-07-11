@@ -1,5 +1,15 @@
-import { Container, SectionHeading, TechBadge } from "../components/SiteShell";
+import { CheckCircleIcon } from "@phosphor-icons/react/ssr";
 import { ArchitectureFlow } from "../components/ArchitectureFlow";
+import { Reveal } from "../components/Reveal";
+import { Container, SectionHeading, TechBadge } from "../components/SiteShell";
+
 const services = [{ name: "Ubuntu 24.04", role: "主机系统", status: "稳定", tech: "HostVDS" }, { name: "Docker / Compose", role: "应用隔离与编排", status: "稳定", tech: "Containers" }, { name: "Caddy", role: "HTTPS 与反向代理", status: "运行中", tech: "Edge" }, { name: "PostgreSQL 16", role: "持久化数据", status: "稳定", tech: "Database" }, { name: "Redis 7", role: "缓存与队列", status: "稳定", tech: "Cache" }, { name: "Portainer", role: "容器可视化", status: "运行中", tech: "Ops" }, { name: "Hermes Agent", role: "AI agent 服务", status: "运行中", tech: "AI" }, { name: "Cloudflare DNS", role: "域名解析与边缘层", status: "运行中", tech: "DNS" }];
 export const metadata = { title: "基础设施", description: "Flower ZC 当前 VPS 开发环境和服务架构。" };
-export default function InfrastructurePage() { return <div className="py-36 md:py-44"><Container><SectionHeading eyebrow="Infrastructure" title="一台 VPS，\n一套可维护的边界。" description="这里展示公开架构和服务角色，不展示管理入口、密钥、数据库密码或敏感运行日志。" /><ArchitectureFlow /><div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{services.map(service => <div key={service.name} className="glass rounded-2xl p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-sm text-white/85">{service.name}</p><p className="mt-1 text-xs text-dim">{service.role}</p></div><span className="text-[10px] text-emerald-200/70">{service.status}</span></div><div className="mt-5"><TechBadge>{service.tech}</TechBadge></div></div>)}</div><div className="mt-6 grid gap-4 md:grid-cols-2"><div className="glass rounded-[1.5rem] p-6"><p className="eyebrow mb-4">安全边界</p><ul className="space-y-3 text-sm leading-6 text-muted"><li>· 3000 端口只绑定 127.0.0.1</li><li>· 外部请求统一经过 Caddy HTTPS</li><li>· 管理面板不嵌入公开站点</li></ul></div><div className="glass rounded-[1.5rem] p-6"><p className="eyebrow mb-4">当前状态</p><p className="flex items-center gap-2 text-sm text-white/80"><i className="pulse-dot h-2 w-2 rounded-full bg-emerald-300" />基础设施可用，持续补齐监控与备份。</p></div></div></Container></div>; }
+
+export default function InfrastructurePage() {
+  return <div className="page-shell"><Container>
+    <SectionHeading eyebrow="Infrastructure" title={"一台 VPS，\n一套清晰的系统边界。"} description="展示公开架构与服务角色，不展示管理入口、密钥、数据库密码或敏感运行日志。" />
+    <Reveal><ArchitectureFlow /></Reveal>
+    <div className="service-grid">{services.map(service => <Reveal key={service.name} className="service-item"><div><span><CheckCircleIcon size={14} />{service.status}</span><h3>{service.name}</h3><p>{service.role}</p><TechBadge>{service.tech}</TechBadge></div></Reveal>)}</div>
+  </Container></div>;
+}

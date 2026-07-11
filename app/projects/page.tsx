@@ -1,5 +1,17 @@
+import { Reveal } from "../components/Reveal";
 import { Container, SectionHeading } from "../components/SiteShell";
 import { ProjectCard } from "../components/ProjectCard";
 import { projects } from "../data/projects";
+
 export const metadata = { title: "项目", description: "Flower ZC 正在运行、计划和实验中的开发项目。" };
-export default function ProjectsPage() { return <div className="py-36 md:py-44"><Container><SectionHeading eyebrow="Portfolio / Projects" title="项目不是截图，\n而是运行中的系统。" description="每张卡片都标记当前状态、技术栈和下一步。没有公开仓库的项目会明确留空，不伪造链接。" /><div className="mb-8 flex flex-wrap gap-2"><span className="rounded-full bg-white px-3 py-1.5 text-xs text-black">全部 {projects.length}</span><span className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/55">运行中</span><span className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/55">计划中</span><span className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/55">实验性</span></div><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{projects.map(project => <ProjectCard key={project.slug} project={project} />)}</div></Container></div>; }
+
+export default function ProjectsPage() {
+  return (
+    <div className="page-shell">
+      <Container>
+        <SectionHeading eyebrow="Projects / 01—06" title={"运行中的系统，\n不是静态作品集。"} description="从 AI Agent 到个人基础设施。每个项目只展示当前状态、技术边界与下一步。" />
+        <div className="projects-grid">{projects.map(project => <Reveal key={project.slug}><ProjectCard project={project} /></Reveal>)}</div>
+      </Container>
+    </div>
+  );
+}

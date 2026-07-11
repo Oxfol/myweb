@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SiteShell } from "./components/SiteShell";
+import { MotionProvider } from "./components/MotionProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://flowerzc.com"),
@@ -13,5 +14,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="zh-CN"><body className="site-noise"><SiteShell>{children}</SiteShell></body></html>;
+  return <html lang="zh-CN"><body><MotionProvider><SiteShell>{children}</SiteShell></MotionProvider></body></html>;
 }
