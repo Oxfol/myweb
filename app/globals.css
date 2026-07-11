@@ -696,6 +696,8 @@ button { color: inherit; font: inherit; }
 .quick-sidebar-line .line-sidebar-label { color: rgba(225,222,235,.82); font-size: 1.08rem; font-weight: 500; letter-spacing: -.03em; transition: transform .14s ease, color .14s ease; }
 .quick-sidebar-line .line-sidebar-item:hover .line-sidebar-label, .quick-sidebar-line .line-sidebar-item.quick-link-active .line-sidebar-label { color: var(--accent-pale) !important; }
 .quick-sidebar-line .line-sidebar-value, .quick-sidebar-line .line-sidebar-arrow { display: none; }
+.project-status-anchors { height: 0; overflow: visible; }
+.project-status-anchors span { display: block; position: relative; top: -6rem; scroll-margin-top: 6rem; }
 .filter-status { justify-self: end; color: var(--success); font-family: "Geist Mono", monospace; font-size: .65rem; white-space: nowrap; }
 .results-count { margin: 0 0 .6rem; color: var(--dim); font-family: "Geist Mono", monospace; font-size: .65rem; }
 .dense-log-row { display: grid; grid-template-columns: 135px minmax(0, 1fr) 32px; gap: 1rem; border-top: 1px solid var(--line); padding: 1.1rem 0; transition: background .2s ease, padding .2s ease; }
