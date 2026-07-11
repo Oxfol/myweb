@@ -5,7 +5,7 @@ import { useEffect, type ReactNode } from "react";
 
 export type ArticleHeading = { id: string; label: string; level: 2 | 3 };
 
-export function ArticleExperience({ children, headings }: { children: ReactNode; headings: ArticleHeading[] }) {
+export function ArticleExperience({ children, headings, sidebar }: { children: ReactNode; headings: ArticleHeading[]; sidebar?: ReactNode }) {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 130, damping: 28, mass: 0.25 });
 
@@ -14,18 +14,11 @@ export function ArticleExperience({ children, headings }: { children: ReactNode;
     nodes.forEach((node, index) => { if (headings[index]) node.id = headings[index].id; });
   }, [headings]);
 
-  return (
-    <>
-      <m.div className="reading-progress" style={{ scaleX }} aria-hidden="true" />
-      <div className="article-layout">
-        <article className="article-body">{children}</article>
-        {headings.length > 0 && (
-          <aside className="article-toc" aria-label="文章目录">
-            <p>本页目录</p>
-            <nav>{headings.map(item => <a key={item.id} href={`#${item.id}`} className={item.level === 3 ? "toc-level-three" : ""}>{item.label}</a>)}</nav>
-          </aside>
-        )}
-      </div>
-    </>
-  );
+  return <>
+    <m.div className="reading-progress" style={{ scaleX }} aria-hidden="true" />
+    <div className="article-layout">
+      <article className="article-body">{children}</article>
+      {(sidebar || headings.length > 0) && <aside className="article-toc" aria-label="详情页侧栏">{sidebar}{headings.length > 0 && <div className="detail-toc"><p>本页目录</p><nav>{headings.map(item => <a key={item.id} href={`#${item.id}`} className={item.level === 3 ? "toc-level-three" : ""}>{item.label}</a>)}</nav></div>}</aside>}
+    </div>
+  </>;
 }

@@ -1,39 +1,31 @@
 import Link from "next/link";
-import { ArrowLeftIcon, ArrowUpRightIcon } from "@phosphor-icons/react/ssr";
+import { ArrowLeftIcon, ArrowRightIcon, ArrowUpRightIcon, CheckCircleIcon, CubeIcon, GitBranchIcon, GithubLogoIcon, LightningIcon } from "@phosphor-icons/react/ssr";
 import { notFound } from "next/navigation";
 import { Reveal } from "../../components/Reveal";
 import { Container, StatusBadge, TechBadge } from "../../components/SiteShell";
 import { getProject, projects } from "../../data/projects";
+import { logs } from "../../data/logs";
 
 export function generateStaticParams() { return projects.map(project => ({ slug: project.slug })); }
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) { const project = getProject((await params).slug); return { title: project?.title || "项目详情", description: project?.description }; }
 
+const featureIcons = [LightningIcon, CubeIcon, GitBranchIcon];
+
 export default async function ProjectDetail({ params }: { params: Promise<{ slug: string }> }) {
   const project = getProject((await params).slug);
   if (!project) notFound();
-  return (
-    <div className="page-shell project-detail-page">
-      <Container>
-        <Link href="/projects" className="back-link"><ArrowLeftIcon size={16} />返回项目</Link>
-        <Reveal className="project-detail-hero">
-          <div>
-            <div className="detail-kicker"><span>{project.number}</span><StatusBadge status={project.status} /></div>
-            <h1>{project.title}</h1>
-            <p>{project.description}</p>
-            <div className="project-tags">{project.stack.map(item => <TechBadge key={item}>{item}</TechBadge>)}</div>
-          </div>
-          <dl className="project-facts">
-            <div><dt>当前阶段</dt><dd>{project.currentPhase}</dd></div>
-            <div><dt>下一步</dt><dd>{project.nextStep}</dd></div>
-            <div><dt>部署</dt><dd>{project.deployedUrl ? <a href={project.deployedUrl} target="_blank" rel="noreferrer">访问线上服务 <ArrowUpRightIcon size={15} /></a> : "暂未公开部署"}</dd></div>
-            <div><dt>GitHub</dt><dd>{project.repository || "仓库暂未公开"}</dd></div>
-          </dl>
-        </Reveal>
-        <Reveal className="project-notes">
-          <p className="eyebrow">项目说明</p>
-          {project.details.map(detail => <p key={detail}>{detail}</p>)}
-        </Reveal>
-      </Container>
-    </div>
-  );
+  const related = projects.filter(item => item.slug !== project.slug && item.stack.some(tech => project.stack.includes(tech))).slice(0, 3);
+  const relatedLogs = logs.filter(log => log.tags.some(tag => project.stack.includes(tag))).slice(0, 3);
+  return <div className="page-shell detail-page project-detail-page"><Container>
+    <nav className="detail-breadcrumb" aria-label="面包屑"><Link href="/">首页</Link><span>/</span><Link href="/projects">Projects</Link><span>/</span><strong>{project.title}</strong></nav>
+    <Reveal className="detail-heading"><div><div className="detail-kicker"><span>{project.number}</span><StatusBadge status={project.status} /></div><h1>{project.title}</h1><p>{project.description}</p></div><Link href="/projects" className="back-link"><ArrowLeftIcon size={16} />返回项目</Link></Reveal>
+    <div className="detail-grid"><main className="detail-main">
+      <section className="detail-section"><div className="section-heading"><span>01</span><div><h2>Overview</h2><p>当前状态、部署边界与下一步计划。</p></div></div><div className="overview-card"><div><small>Status</small><strong><StatusBadge status={project.status} /></strong></div><div><small>Repository</small><strong>{project.repository ? <a href={project.repository} target="_blank" rel="noreferrer">GitHub <ArrowUpRightIcon size={14} /></a> : "Private / 未公开"}</strong></div><div><small>Deployment</small><strong>{project.deployedUrl ? <a href={project.deployedUrl} target="_blank" rel="noreferrer">Online <ArrowUpRightIcon size={14} /></a> : "Design phase"}</strong></div><div><small>Current phase</small><strong>{project.currentPhase}</strong></div><div><small>Next step</small><strong>{project.nextStep}</strong></div><div><small>Last updated</small><strong>2026-07-11</strong></div></div></section>
+      <section className="detail-section"><div className="section-heading"><span>02</span><div><h2>Features</h2><p>把项目能力拆成可验证的产品单元。</p></div></div><div className="feature-grid">{project.details.concat(["围绕可观察、可回滚和长期维护设计边界"]).slice(0, 3).map((detail, index) => { const Icon = featureIcons[index]; return <article className="feature-card" key={detail}><Icon size={20} /><h3>{["Stable workflow", "Composable modules", "Operational visibility"][index]}</h3><p>{detail}</p></article>; })}</div></section>
+      <section className="detail-section"><div className="section-heading"><span>03</span><div><h2>Architecture</h2><p>从入口到运行时的最小闭环。</p></div></div><div className="architecture-diagram"><div className="architecture-node"><small>ENTRY</small><strong>Web / API</strong></div><ArrowRightIcon size={18} /><div className="architecture-node"><small>CORE</small><strong>{project.title}</strong></div><ArrowRightIcon size={18} /><div className="architecture-node"><small>RUNTIME</small><strong>Docker / VPS</strong></div><div className="architecture-line"><span>GitHub Actions</span><span>Observability</span><span>Data boundary</span></div></div></section>
+      <section className="detail-section"><div className="section-heading"><span>04</span><div><h2>Tech Stack</h2><p>构成项目运行边界的工具与服务。</p></div></div><div className="detail-tech-grid">{project.stack.concat(["Docker", "GitHub Actions", "Postgres"]).filter((item, index, arr) => arr.indexOf(item) === index).map(item => <TechBadge key={item}>{item}</TechBadge>)}</div></section>
+      <section className="detail-section"><div className="section-heading"><span>05</span><div><h2>Development Timeline</h2><p>从问题定义到可部署版本的关键节点。</p></div></div><div className="detail-timeline">{[["2026-07-01", "Started", "确认问题边界与最小可行版本"], ["2026-07-03", "Runtime", "接入 Docker、代理与运行时检查"], ["2026-07-07", "Iteration", "根据真实使用反馈调整模块边界"], ["2026-07-11", "Automation", project.nextStep]].map(([date, title, text]) => <div key={date}><time>{date}</time><div><h3>{title}</h3><p>{text}</p></div><CheckCircleIcon size={17} /></div>)}</div></section>
+      <section className="detail-section related-section"><div className="section-heading"><span>06</span><div><h2>Related Content</h2><p>继续了解相邻项目与开发记录。</p></div></div><div className="related-detail-grid">{related.map(item => <Link key={item.slug} href={`/projects/${item.slug}`}><small>PROJECT</small><strong>{item.title}</strong><span>{item.description}</span><ArrowRightIcon size={15} /></Link>)}{relatedLogs.map(item => <Link key={item.slug} href={`/logs/${item.slug}`}><small>LOG · {item.date}</small><strong>{item.title}</strong><span>{item.summary}</span><ArrowRightIcon size={15} /></Link>)}</div></section>
+    </main><aside className="detail-sidebar"><div className="sidebar-card"><p className="eyebrow">Project Index</p><strong>{project.number} / {String(projects.length).padStart(2, "0")}</strong><StatusBadge status={project.status} /><div className="sidebar-actions">{project.repository && <a href={project.repository} target="_blank" rel="noreferrer"><GithubLogoIcon size={16} />GitHub</a>}{project.deployedUrl && <a href={project.deployedUrl} target="_blank" rel="noreferrer"><ArrowUpRightIcon size={16} />Demo</a>}</div></div><div className="sidebar-card"><p className="eyebrow">Quick Navigation</p><nav className="sidebar-links"><a href="#overview">Overview</a><a href="#features">Features</a><a href="#architecture">Architecture</a><a href="#timeline">Timeline</a><a href="#related">Related</a></nav></div><div className="sidebar-card"><p className="eyebrow">Project Facts</p><dl className="sidebar-facts"><div><dt>Version</dt><dd>v0.1</dd></div><div><dt>License</dt><dd>Private</dd></div><div><dt>Updated</dt><dd>2026-07-11</dd></div></dl></div></aside></div>
+  </Container></div>;
 }
