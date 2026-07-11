@@ -55,14 +55,25 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script_stop: true
           script: |
+            set -eu
             cd /opt/stacks/blog
             git fetch origin main
             git reset --hard origin/main
             docker compose up -d --build --remove-orphans
             docker image prune -f
-            curl -fsS http://127.0.0.1:3000
-            status="$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3000)"
-            if [ "$status" != "200" ]; then
-              echo "Health check failed: expected HTTP 200, got $status"
-              exit 1
-            fi
+
+            echo "Waiting for blog to become ready..."
+            for attempt in $(seq 1 30); do
+              status="$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3000 || true)"
+              if [ "$status" = "200" ]; then
+                echo "Health check passed on attempt $attempt."
+                exit 0
+              fi
+              echo "Attempt $attempt/30: HTTP ${status:-unavailable}; retrying in 2 seconds..."
+              sleep 2
+            done
+
+            echo "Health check failed after 60 seconds."
+            docker compose ps
+            docker compose logs --tail=100 blog
+            exit 1
