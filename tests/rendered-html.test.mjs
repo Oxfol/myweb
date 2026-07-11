@@ -1,87 +1,86 @@
 import assert from "node:assert/strict";
-import { access, readFile, readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
+import { calculateReadingTime, parseLogSource, sortPublishedLogs } from "../app/data/logs-core.js";
 
-const developmentPreviewMeta =
-  /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
-const templateRoot = new URL("../", import.meta.url);
-const previewRoot = new URL("../app/_sites-preview/", import.meta.url);
+const contentDir = new URL("../content/logs/", import.meta.url);
+const logsSourceUrl = new URL("../app/data/logs.ts", import.meta.url);
+const logFiles = (await readdir(contentDir)).filter(file => file.endsWith(".md"));
+const sources = await Promise.all(logFiles.map(async file => ({ file, source: await readFile(new URL(file, contentDir), "utf8") })));
+const parsed = sources.map(({ file, source }) => parseLogSource(`content/logs/${file}`, source));
+const published = sortPublishedLogs(parsed);
 
-async function render() {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-
-  return worker.fetch(
-    new Request("http://localhost/", {
-      headers: { accept: "text/html" },
-    }),
-    {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
-    },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
-  );
-}
-
-test("server-renders the starter loading skeleton", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
-
-  const html = await response.text();
-  assert.match(html, developmentPreviewMeta);
-  assert.match(html, /<title>Your site is taking shape<\/title>/i);
-  assert.match(html, /Codex is working/);
-  assert.match(html, /Your site is taking shape/);
-  assert.match(html, /Codex is building the first version/);
-  assert.match(html, /react-loading-skeleton/);
-  assert.match(html, /role="status"/);
+test("automatically discovers at least three Markdown logs", async () => {
+  const source = await readFile(logsSourceUrl, "utf8");
+  assert.ok(logFiles.length >= 3);
+  assert.match(source, /import\.meta\.glob\(.*content\/logs\/\*\.md/s);
+  assert.doesNotMatch(source, /2026-07-11-test\.md/);
 });
 
-test("keeps the loading skeleton scoped and disposable", async () => {
-  const [preview, css, page, layout, packageJson, files] = await Promise.all([
-    readFile(new URL("SkeletonPreview.tsx", previewRoot), "utf8"),
-    readFile(new URL("preview.css", previewRoot), "utf8"),
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readdir(previewRoot),
+test("parses front matter and creates a filename slug", () => {
+  const log = parsed.find(item => item.slug === "2026-07-11-test");
+  assert.ok(log);
+  assert.equal(log.title, "test");
+  assert.equal(log.date, "2026-07-11");
+  assert.deepEqual(log.tags, ["test"]);
+  assert.equal(log.status, "published");
+  assert.equal(log.content, "test");
+});
+
+test("only published logs enter the public collection", () => {
+  assert.ok(published.some(log => log.slug === "2026-07-11-test"));
+  assert.ok(!published.some(log => log.slug === "2026-07-12-draft"));
+});
+
+test("sorts by date descending, then slug descending", () => {
+  const sorted = sortPublishedLogs([
+    { slug: "a", date: "2026-07-11", status: "published" },
+    { slug: "c", date: "2026-07-12", status: "published" },
+    { slug: "b", date: "2026-07-11", status: "published" },
   ]);
+  assert.deepEqual(sorted.map(log => log.slug), ["c", "b", "a"]);
+});
 
-  assert.deepEqual(files.sort(), ["SkeletonPreview.tsx", "preview.css"]);
-  assert.match(preview, /from "react-loading-skeleton"/);
-  assert.match(preview, /baseColor="#eceae7"/);
-  assert.match(preview, /highlightColor="#f9f8f6"/);
-  assert.match(preview, /duration=\{2\.8\}/);
-  assert.match(preview, /sites-skeleton-search-placeholder/);
-  assert.match(packageJson, /"react-loading-skeleton": "3\.5\.0"/);
+test("calculates reading time without manual metadata", () => {
+  assert.equal(calculateReadingTime("中".repeat(400)), "1 分钟");
+  assert.equal(calculateReadingTime(Array.from({ length: 200 }, () => "word").join(" ")), "1 分钟");
+  assert.equal(calculateReadingTime("中".repeat(801)), "3 分钟");
+  assert.equal(parsed.find(log => log.slug === "2026-07-11-test").readingTime, "1 分钟");
+});
 
-  const shellIndex = preview.indexOf('className="sites-skeleton-shell"');
-  const statusIndex = preview.indexOf('className="sites-skeleton-status"');
-  assert.ok(shellIndex >= 0 && statusIndex > shellIndex);
-  assert.match(css, /position:\s*fixed/);
-  assert.match(css, /inset:\s*0/);
-  assert.match(css, /opacity:\s*0\.52/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce/);
-  assert.doesNotMatch(css, /#020617|canvas|pets|progress/i);
-  assert.doesNotMatch(
-    preview,
-    /loading-spinner|status-mark|status-progress|canvas|cookie|random/i,
+test("invalid published front matter fails with the file path", () => {
+  assert.throws(
+    () => parseLogSource("content/logs/bad.md", "---\ndate: 2026-07-11\ntags: []\nstatus: published\n---\nbody"),
+    /content\/logs\/bad\.md: title is required/,
   );
-
-  assert.match(page, /export const metadata:\s*Metadata/);
-  assert.match(page, /"codex-preview": "development"/);
-  assert.match(page, /<SkeletonPreview \/>/);
-  assert.match(layout, /title:\s*"Starter Project"/);
-  assert.doesNotMatch(layout, /codex-preview|_sites-preview|themeColor|\bViewport\b/);
-  assert.doesNotMatch(css, /(^|\s)(html|body)\s*\{/m);
-
-  await assert.rejects(
-    access(new URL("public/_sites-preview", templateRoot)),
+  assert.throws(
+    () => parseLogSource("content/logs/bad-status.md", "---\ntitle: Bad\ndate: 2026-07-11\nsummary: Bad\ntags: []\nstatus: stable\n---\nbody"),
+    /content\/logs\/bad-status\.md: status must be draft or published/,
   );
+});
+
+let workerPromise;
+async function render(pathname) {
+  workerPromise ||= import(new URL(`../dist/server/index.js?${Date.now()}`, import.meta.url).href).then(module => module.default);
+  const worker = await workerPromise;
+  return worker.fetch(new Request(`http://localhost${pathname}`, { headers: { accept: "text/html" } }), { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } }, { waitUntil() {}, passThroughOnException() {} });
+}
+
+test("getLog-backed detail route renders the newly added published log", async () => {
+  const response = await render("/logs/2026-07-11-test");
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /test/);
+});
+
+test("draft detail route is not public", async () => {
+  const response = await render("/logs/2026-07-12-draft");
+  assert.equal(response.status, 404);
+});
+
+test("sitemap includes published logs and excludes drafts", async () => {
+  const response = await render("/sitemap.xml");
+  const sitemap = await response.text();
+  assert.equal(response.status, 200);
+  assert.match(sitemap, /2026-07-11-test/);
+  assert.doesNotMatch(sitemap, /2026-07-12-draft/);
 });

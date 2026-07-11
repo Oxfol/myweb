@@ -3,7 +3,7 @@ title: 为个人开发门户建立内容骨架
 date: 2026-07-11
 summary: 把项目状态、开发日志和 VPS 基础设施从零散记录整理成可长期维护的公开入口。
 tags: [Portal, TypeScript, Docs]
-status: active
+status: published
 ---
 
 ## 为什么需要一个门户

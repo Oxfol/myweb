@@ -3,7 +3,7 @@ title: 将 HostVDS 改造成长期开发服务器
 date: 2026-07-10
 summary: 记录 Docker、Caddy、PostgreSQL、Redis 与 Hermes Agent 的部署过程，以及网络和反向代理问题的真实修复。
 tags: [VPS, Docker, Caddy]
-status: stable
+status: published
 ---
 
 ## 背景
