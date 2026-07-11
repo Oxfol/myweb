@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRightIcon, GithubLogoIcon } from "@phosphor-icons/react/ssr";
+import { ArrowUpRightIcon, GithubLogoIcon, RssIcon } from "@phosphor-icons/react/ssr";
 import type { ReactNode } from "react";
 import { SiteHeader } from "./SiteHeader";
 
@@ -31,9 +31,10 @@ function Footer() {
         <div className="footer-meta">
           <span>© {new Date().getFullYear()} Flower ZC</span>
           <div>
-            <a href="https://github.com/flowerzc" target="_blank" rel="noreferrer"><GithubLogoIcon size={16} />GitHub</a>
-            <span>Next.js / TypeScript</span>
-            <span>Powered by HostVDS</span>
+            <a href="https://github.com/Oxfol" target="_blank" rel="noreferrer"><GithubLogoIcon size={16} />GitHub</a>
+            <a href="/sitemap.xml"><RssIcon size={16} />RSS / Sitemap</a>
+            <span>Last deploy · 2026-07-11</span>
+            <span>Email · 暂未公开</span>
           </div>
         </div>
       </Container>
@@ -54,6 +55,10 @@ export function SectionHeading({ eyebrow, title, description, level = 1 }: { eye
       {description && <p className="section-description">{description}</p>}
     </div>
   );
+}
+
+export function PageHeading({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
+  return <header className="page-heading"><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p>{description}</p></header>;
 }
 
 export function StatusBadge({ status }: { status: string }) {

@@ -1,16 +1,12 @@
-import { Reveal } from "../components/Reveal";
-import { Container, SectionHeading, TechBadge } from "../components/SiteShell";
+import { ArrowUpRightIcon, BriefcaseIcon, CodeIcon, GithubLogoIcon, HeartIcon, WrenchIcon } from "@phosphor-icons/react/ssr";
+import { Container, PageHeading, TechBadge } from "../components/SiteShell";
+import { QuickSidebar } from "../components/QuickSidebar";
 
-const focus = ["AI Agent", "后端 API", "微信小程序", "自动化部署", "交易系统", "VPS 基础设施"];
+const skills = ["TypeScript", "Python", "React", "Next.js", "Docker", "PostgreSQL", "Redis", "Playwright", "Caddy", "GitHub Actions"];
+const timeline = [["2026", "个人开发门户", "把项目、日志与基础设施整理成可持续维护的公开入口。"], ["2025", "AI Agent 基础层", "开始构建 Hermes Agent，探索任务编排与工具调用。"], ["长期", "独立开发", "从真实问题出发，优先交付能运行、能观察、能接手的系统。"]];
+
 export const metadata = { title: "关于我", description: "Flower ZC 的技术方向、关注领域与长期目标。" };
 
 export default function AboutPage() {
-  return <div className="page-shell"><Container>
-    <SectionHeading eyebrow="About / Flower ZC" title={"把复杂问题，\n拆成可维护的系统。"} description="独立开发者。从真实需求出发，先让最小系统运行，再用日志、指标与自动化提高可靠性。" />
-    <div className="editorial-grid">
-      <Reveal className="editorial-primary"><p className="eyebrow">正在关注</p><div className="project-tags">{focus.map(item => <TechBadge key={item}>{item}</TechBadge>)}</div><p>目前的工作重心是 Hermes Agent、个人 VPS 开发环境、微信小程序海报 API 和 AI 服务适配。技术选择优先考虑可观察、可回滚和长期维护。</p></Reveal>
-      <Reveal className="editorial-list"><p className="eyebrow">工作方式</p><ol><li><span>01</span>先确认边界，再开始编码</li><li><span>02</span>把真实错误写进日志</li><li><span>03</span>用自动化减少重复操作</li></ol></Reveal>
-    </div>
-    <Reveal className="editorial-quote"><p className="eyebrow">技术理念</p><h2>少一点魔法，<br />多一点证据。</h2><p>能被部署、能被监控、能被另一个人接手，才算完成。</p></Reveal>
-  </Container></div>;
+  return <div className="dense-page"><Container><PageHeading eyebrow="About / Developer Profile" title="关于 Flower ZC" description="独立开发者，持续把想法拆成可以运行、观察和迭代的系统。" /><div className="dense-page-layout"><main><section className="profile-strip"><div className="profile-avatar">f</div><div><span className="eyebrow">Developer Profile</span><h2>AI Agent · Infrastructure · Automation</h2><p>当前在香港 VPS 上维护个人开发环境，记录从代码到部署的每个关键决策。</p></div><a href="https://github.com/Oxfol" target="_blank" rel="noreferrer"><GithubLogoIcon size={18} />GitHub <ArrowUpRightIcon size={15} /></a></section><div className="about-grid"><section className="about-panel"><header><CodeIcon size={18} /><h2>Skills & Stack</h2></header><div className="skill-cloud">{skills.map(item => <TechBadge key={item}>{item}</TechBadge>)}</div></section><section className="about-panel"><header><HeartIcon size={18} /><h2>Current Focus</h2></header><ul className="focus-list"><li>让 Hermes Agent 具备可回放的任务链</li><li>把部署、备份和监控收敛到一套边界</li><li>持续维护公开日志与项目状态</li></ul></section></div><section className="about-panel timeline-panel"><header><BriefcaseIcon size={18} /><h2>Experience Timeline</h2></header><div className="about-timeline">{timeline.map(([year, title, text]) => <article key={year}><time>{year}</time><div><h3>{title}</h3><p>{text}</p></div></article>)}</div></section><section className="about-panel tools-panel"><header><WrenchIcon size={18} /><h2>Tools & Interests</h2></header><p>终端、浏览器自动化、模型适配、开发基础设施、可观察性、风险控制与长期维护。</p></section></main><QuickSidebar title="Profile" items={[{ label: "Current Focus", value: "Hermes Agent" }, { label: "Location", value: "Hong Kong VPS" }, { label: "Availability", value: "Open source" }, { label: "Contact", href: "/contact" }]} /></div></Container></div>;
 }

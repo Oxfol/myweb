@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation";
 import { ArrowUpRightIcon, GithubLogoIcon, ListIcon, XIcon } from "@phosphor-icons/react";
 import { AnimatePresence, m } from "motion/react";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "./ThemeToggle";
 
 const nav = [
   ["首页", "/"],
-  ["关于", "/about"],
   ["项目", "/projects"],
   ["日志", "/logs"],
   ["基础设施", "/infrastructure"],
   ["路线图", "/roadmap"],
+  ["关于", "/about"],
   ["联系", "/contact"],
 ] as const;
 
@@ -57,7 +58,12 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <a className="github-link" href="https://github.com/flowerzc" target="_blank" rel="noreferrer">
+        <div className="header-actions">
+          <Link href="/logs#log-search" className="header-action-link"><span>Search</span></Link>
+          <ThemeToggle />
+          <Link href="/contact" className="header-contact-link">联系</Link>
+        </div>
+        <a className="github-link" href="https://github.com/Oxfol" target="_blank" rel="noreferrer">
           <GithubLogoIcon size={17} weight="regular" aria-hidden="true" />
           <span>GitHub</span>
           <ArrowUpRightIcon size={14} aria-hidden="true" />
@@ -85,6 +91,7 @@ export function SiteHeader() {
                   <ArrowUpRightIcon size={20} aria-hidden="true" />
                 </Link>
               ))}
+              <Link href="/logs#log-search" className="mobile-nav-link" onClick={() => setOpen(false)}><span className="mobile-nav-index">08</span><span>Search</span><ArrowUpRightIcon size={20} aria-hidden="true" /></Link>
             </m.nav>
           </m.div>
         )}

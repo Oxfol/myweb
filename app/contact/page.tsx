@@ -1,16 +1,10 @@
-import { ArrowUpRightIcon, GithubLogoIcon } from "@phosphor-icons/react/ssr";
+import { ArrowUpRightIcon, GithubLogoIcon, RssIcon } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
-import { Reveal } from "../components/Reveal";
-import { Container, SectionHeading } from "../components/SiteShell";
+import { Container, PageHeading } from "../components/SiteShell";
+import { QuickSidebar } from "../components/QuickSidebar";
 
 export const metadata = { title: "联系", description: "联系 Flower ZC，查看公开项目与 GitHub。" };
 
 export default function ContactPage() {
-  return <div className="page-shell"><Container>
-    <SectionHeading eyebrow="Contact" title={"如果你也在，\n把想法做成系统。"} description="公开代码、项目与开发日志是最好的介绍。联系入口保持简单，不放无效表单。" />
-    <Reveal className="contact-panel">
-      <a href="https://github.com/flowerzc" target="_blank" rel="noreferrer"><GithubLogoIcon size={26} /><span><small>GitHub</small>github.com/flowerzc</span><ArrowUpRightIcon size={22} /></a>
-      <Link href="/projects"><span><small>从这里开始</small>查看公开项目</span><ArrowUpRightIcon size={22} /></Link>
-    </Reveal>
-  </Container></div>;
+  return <div className="dense-page"><Container><PageHeading eyebrow="Contact / Connect" title="联系与入口" description="从公开项目、开发日志或 GitHub 开始了解正在构建的系统。" /><div className="dense-page-layout"><main className="contact-grid"><a href="https://github.com/Oxfol" target="_blank" rel="noreferrer"><GithubLogoIcon size={22} /><span><small>GitHub</small>github.com/Oxfol</span><ArrowUpRightIcon size={18} /></a><Link href="/logs"><RssIcon size={22} /><span><small>开发日志</small>阅读最近的构建记录</span><ArrowUpRightIcon size={18} /></Link><div><span><small>Email</small>暂未公开</span></div></main><QuickSidebar title="Contact" items={[{ label: "GitHub", href: "https://github.com/Oxfol" }, { label: "Logs", href: "/logs" }, { label: "Projects", href: "/projects" }]} /></div></Container></div>;
 }

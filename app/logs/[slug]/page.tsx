@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeftIcon, ArrowRightIcon, ClockIcon } from "@phosphor-icons/react/ssr";
 import { notFound } from "next/navigation";
 import { ArticleExperience, type ArticleHeading } from "../../components/ArticleExperience";
+import { ArticleActions } from "../../components/ArticleActions";
 import { MarkdownRenderer } from "../../components/MarkdownRenderer";
 import { Container, TechBadge } from "../../components/SiteShell";
 import { getLog, logs } from "../../data/logs";
@@ -38,12 +39,14 @@ export default async function LogDetail({ params }: { params: Promise<{ slug: st
           <h1>{log.title}</h1>
           <p>{log.summary}</p>
           <div className="log-tags">{log.tags.map(tag => <TechBadge key={tag}>{tag}</TechBadge>)}</div>
+          <ArticleActions />
         </header>
         <ArticleExperience headings={headings}><MarkdownRenderer content={log.content} /></ArticleExperience>
         <nav className="article-pagination" aria-label="日志翻页">
           <div>{previous && <Link href={`/logs/${previous.slug}`}><ArrowLeftIcon size={16} /><span><small>上一篇</small>{previous.title}</span></Link>}</div>
           <div>{next && <Link href={`/logs/${next.slug}`}><span><small>下一篇</small>{next.title}</span><ArrowRightIcon size={16} /></Link>}</div>
         </nav>
+        <section className="related-logs"><p className="eyebrow">Related Logs</p><div>{logs.filter(item => item.slug !== log.slug && item.tags.some(tag => log.tags.includes(tag))).slice(0, 3).map(item => <Link key={item.slug} href={`/logs/${item.slug}`}><span>{item.date}</span>{item.title}<ArrowRightIcon size={15} /></Link>)}</div></section>
       </Container>
     </div>
   );

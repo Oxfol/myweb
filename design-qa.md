@@ -55,3 +55,13 @@
 - Console errors and warnings: none
 
 final result: passed
+
+## Phase 2 IA/UI Verification
+
+- Scope: dense secondary-page information architecture, fixed navigation, quick sidebars, log/project explorers, dashboard/roadmap/profile panels, and compact detail actions.
+- Reference: approved dark-purple Dot Field direction above plus the user-approved Phase 2 IA specification. The secondary pages intentionally reduce hero scale and increase useful information density.
+- Browser evidence: `/logs`, `/projects`, and `/logs/2026-07-11-test` rendered in the in-app browser; `/logs` search for `HostVDS` returned one match; mobile viewport 375×812 rendered the drawer trigger and compact layout.
+- Console: no browser errors or warnings.
+- Build evidence: `npm run lint`, `npm test`, and `npm run build` passed.
+
+final result: passed

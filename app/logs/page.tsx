@@ -1,17 +1,10 @@
-import { LogCard } from "../components/LogCard";
-import { Reveal } from "../components/Reveal";
-import { Container, SectionHeading } from "../components/SiteShell";
+import { LogsExplorer } from "../components/LogsExplorer";
+import { PageHeading, Container } from "../components/SiteShell";
+import { QuickSidebar } from "../components/QuickSidebar";
 import { logs } from "../data/logs";
 
 export const metadata = { title: "开发日志", description: "Flower ZC 的基础设施、项目和部署开发日志。" };
 
 export default function LogsPage() {
-  return (
-    <div className="page-shell logs-page">
-      <Container>
-        <SectionHeading eyebrow={`Dev Log / ${String(logs.length).padStart(2, "0")}`} title={"把过程留下来，\n让系统可以复盘。"} description="保留命令、错误、根因和修复逻辑。日志来自仓库中的 Markdown，并在每次构建时自动更新。" />
-        <div className="log-timeline logs-index">{logs.map(log => <Reveal key={log.slug}><LogCard log={log} /></Reveal>)}</div>
-      </Container>
-    </div>
-  );
+  return <div className="dense-page"><Container><PageHeading eyebrow={`Dev Log / ${String(logs.length).padStart(2, "0")}`} title="开发日志" description="记录真实开发过程、问题与解决方案。支持即时搜索正文、标签和摘要。" /><div className="dense-page-layout"><main><LogsExplorer logs={logs} /></main><QuickSidebar title="日志导航" active="最新日志" items={[{ label: "最新日志", href: "/logs" }, { label: "年份", value: "2026" }, { label: "标签", value: `${new Set(logs.flatMap(log => log.tags)).size} 个` }, { label: "热门文章", href: `/logs/${logs[0]?.slug}` }]} /></div></Container></div>;
 }
