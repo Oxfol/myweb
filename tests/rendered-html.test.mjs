@@ -3,6 +3,7 @@ import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
 import { calculateReadingTime, isValidCalendarDate, parseLogSource, sortPublishedLogs } from "../app/data/logs-core.js";
 import { getProjectFacts, getProjectSections } from "../app/data/project-detail.js";
+import { buildSitemapEntries } from "../app/data/sitemap-core.js";
 
 const contentDir = new URL("../content/logs/", import.meta.url);
 const logsSourceUrl = new URL("../app/data/logs.ts", import.meta.url);
@@ -142,6 +143,8 @@ test("draft detail route is not public", async () => {
 test("project detail anchors have unique rendered targets and optional sections stay hidden", async () => {
   const html = await renderHtml("/projects/hermes-agent");
   const anchorTargets = [...html.matchAll(/href="#([^"]+)"/g)].map(match => match[1]);
+  const projectSectionIds = ["overview", "features", "architecture", "tech-stack", "timeline", "related"];
+  const visibleSectionIds = anchorTargets.filter(target => projectSectionIds.includes(target));
   assert.ok(anchorTargets.includes("overview"));
   assert.ok(anchorTargets.includes("features"));
   assert.ok(anchorTargets.includes("tech-stack"));
@@ -150,6 +153,12 @@ test("project detail anchors have unique rendered targets and optional sections 
   for (const target of anchorTargets) {
     assert.equal([...html.matchAll(new RegExp(`id="${target}"`, "g"))].length, 1, `#${target} must have one target`);
   }
+  const visibleNumbers = visibleSectionIds.map(target => {
+    const section = html.match(new RegExp(`<section[^>]*id="${target}"[^>]*>[\\s\\S]*?<div class="section-heading"><span>(\\d{2})</span>`));
+    assert.ok(section, `#${target} must render a section number`);
+    return section[1];
+  });
+  assert.deepEqual(visibleNumbers, visibleSectionIds.map((_, index) => String(index + 1).padStart(2, "0")));
   assert.doesNotMatch(html, /Development Timeline|Project Facts|Docker \/ VPS|GitHub Actions|Postgres/);
   assert.match(html, /Python/);
   assert.match(html, /Playwright/);
@@ -181,14 +190,34 @@ test("sitemap uses log dates and omits fabricated dates elsewhere", async () => 
   const sitemap = await renderHtml("/sitemap.xml");
   const entries = [...sitemap.matchAll(/<url>(.*?)<\/url>/gs)].map(match => match[1]);
   const byLocation = new Map(entries.map(entry => [entry.match(/<loc>(.*?)<\/loc>/)?.[1], entry]));
+  assert.equal(byLocation.size, entries.length, "sitemap URLs must be unique");
+
+  const requireEntry = url => {
+    assert.equal(byLocation.has(url), true, `${url} must be present in sitemap`);
+    return byLocation.get(url);
+  };
 
   for (const pathname of ["", "/about", "/projects", "/logs", "/infrastructure", "/roadmap", "/contact"]) {
-    assert.doesNotMatch(byLocation.get(`https://flowerzc.com${pathname}`) || "", /<lastmod>/);
+    assert.doesNotMatch(requireEntry(`https://flowerzc.com${pathname}`), /<lastmod>/);
   }
   for (const slug of ["hermes-agent", "wechat-api", "ai-service", "trading-bot", "webhook-service", "dev-infrastructure"]) {
-    assert.doesNotMatch(byLocation.get(`https://flowerzc.com/projects/${slug}`) || "", /<lastmod>/);
+    assert.doesNotMatch(requireEntry(`https://flowerzc.com/projects/${slug}`), /<lastmod>/);
   }
   for (const log of published) {
-    assert.match(byLocation.get(`https://flowerzc.com/logs/${log.slug}`) || "", new RegExp(`<lastmod>${log.date}</lastmod>`));
+    assert.match(requireEntry(`https://flowerzc.com/logs/${log.slug}`), new RegExp(`<lastmod>${log.date}</lastmod>`));
   }
+});
+
+test("sitemap emits a declared project updatedAt and omits an undeclared one", () => {
+  const entries = buildSitemapEntries({
+    base: "https://flowerzc.com",
+    staticRoutes: [],
+    projects: [
+      { slug: "dated-fixture", updatedAt: "2026-07-13" },
+      { slug: "undated-fixture" },
+    ],
+    logs: [],
+  });
+  assert.equal(entries[0].lastModified, "2026-07-13");
+  assert.equal("lastModified" in entries[1], false);
 });

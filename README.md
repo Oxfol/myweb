@@ -53,8 +53,9 @@ Caddy 负责域名、HTTPS 和反向代理；本项目不管理其他服务的 C
 
 1. 在 `content/logs` 新建 `YYYY-MM-DD-slug.md`。
 2. 添加 frontmatter：`title`、`date`、`summary`、`tags`、`status`。
-3. 在 `app/data/logs.ts` 添加索引条目和正文映射。
-4. 本地运行构建并提交。
+3. `date` 必须是独立的 `YYYY-MM-DD` 标量和真实日历日期，不要附加行内注释。
+4. 新文件会在下次构建时由 `import.meta.glob` 自动发现，无需修改 `app/data/logs.ts`。
+5. 本地运行构建并提交。
 
 ## 添加项目
 
