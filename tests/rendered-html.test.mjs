@@ -171,28 +171,109 @@ test("automatically discovers and losslessly migrates the six public projects", 
   })), legacyProjects);
   assert.deepEqual(publicProjects.map(project => project.slug), legacyProjects.map(project => project.slug));
   assert.ok(publicProjects.every(project => project.publicationStatus === "published"));
-  assert.ok(publicProjects.every(project => project.content === ""));
+  assert.ok(publicProjects.every(project => project.content.trim() === ""));
 });
 
 test("parses the complete project contract and keeps publication status separate", () => {
+  const body = "  ## Overview\n\nSafe project body.\n";
   const project = parseProjectSource("content/projects/full-contract.md", projectSource({
     publicationStatus: "draft",
     status: "stable",
     repository: "https://github.com/Oxfol/myweb",
     deployedUrl: "https://flowerzc.com",
     architecture: [{ label: "Web", value: "Application" }],
-    timeline: [{ date: "2024-02-29", title: "Started", description: "Initial work" }],
+    timeline: [{ date: "'2024-02-29'", title: "Started", description: "Initial work" }],
     version: "v1.0.0",
     license: "MIT",
-    updatedAt: "2026-07-13",
-  }, "## Overview\n\nSafe project body."));
+    updatedAt: "\"2026-07-13\"",
+  }, body));
   assert.equal(project.slug, "full-contract");
+  assert.equal(project.order, 1);
+  assert.equal(project.title, "Fixture project");
+  assert.equal(project.description, "Fixture description");
   assert.equal(project.publicationStatus, "draft");
   assert.equal(project.status, "stable");
   assert.equal(project.number, "01");
+  assert.deepEqual(project.stack, ["TypeScript"]);
+  assert.equal(project.currentPhase, "Validation");
+  assert.equal(project.nextStep, "Release");
+  assert.deepEqual(project.features, ["Strict parsing"]);
+  assert.equal(project.repository, "https://github.com/Oxfol/myweb");
+  assert.equal(project.deployedUrl, "https://flowerzc.com");
+  assert.deepEqual(project.architecture, [{ label: "Web", value: "Application" }]);
   assert.equal(project.timeline[0].date, "2024-02-29");
+  assert.equal(project.version, "v1.0.0");
+  assert.equal(project.license, "MIT");
   assert.equal(project.updatedAt, "2026-07-13");
-  assert.match(project.content, /Safe project body/);
+  assert.equal(project.content, body);
+});
+
+test("enforces the architecture value 500-character boundary", () => {
+  const accepted = parseProjectSource("content/projects/architecture-500.md", projectSource({
+    architecture: [{ label: "Web", value: "x".repeat(500) }],
+  }));
+  assert.equal(accepted.architecture[0].value.length, 500);
+  assert.throws(
+    () => parseProjectSource("content/projects/architecture-501.md", projectSource({ architecture: [{ label: "Web", value: "x".repeat(501) }] })),
+    /architecture-501\.md: architecture\[0\]\.value: must be at most 500 characters/,
+  );
+});
+
+test("normalizes optional URLs and strings at their exact boundaries", () => {
+  const prefix = "https://example.com/";
+  const url2048 = prefix + "a".repeat(2048 - prefix.length);
+  const url2049 = `${url2048}a`;
+  const accepted = parseProjectSource("content/projects/url-2048.md", projectSource({
+    repository: JSON.stringify(`  ${url2048}  `),
+    deployedUrl: '""',
+    version: '""',
+    license: '""',
+  }));
+  assert.equal(accepted.repository, url2048);
+  assert.equal(accepted.repository.length, 2048);
+  assert.equal(accepted.deployedUrl, undefined);
+  assert.equal(accepted.version, undefined);
+  assert.equal(accepted.license, undefined);
+  assert.throws(() => parseProjectSource("content/projects/url-2049.md", projectSource({ repository: url2049 })), /url-2049\.md: repository: must be at most 2048 characters/);
+  assert.throws(() => parseProjectSource("content/projects/url-spaces.md", projectSource({ repository: "'   '" })), /url-spaces\.md: repository: must not be empty/);
+  assert.throws(() => parseProjectSource("content/projects/version-spaces.md", projectSource({ version: "'   '" })), /version-spaces\.md: version: must not be empty/);
+  assert.throws(() => parseProjectSource("content/projects/license-spaces.md", projectSource({ license: "'   '" })), /license-spaces\.md: license: must not be empty/);
+});
+
+test("deduplicates normalized stack and features after enforcing input limits", () => {
+  const project = parseProjectSource("content/projects/deduplicated.md", projectSource({
+    stack: [JSON.stringify(" TypeScript "), "TypeScript", "React", JSON.stringify(" React ")],
+    features: [JSON.stringify(" First "), "First", "Second", JSON.stringify(" Second ")],
+  }));
+  assert.deepEqual(project.stack, ["TypeScript", "React"]);
+  assert.deepEqual(project.features, ["First", "Second"]);
+  assert.throws(() => parseProjectSource("content/projects/empty-stack-item.md", projectSource({ stack: ["TypeScript", "'   '"] })), /empty-stack-item\.md: stack\[1\]: must not be empty/);
+  assert.throws(() => parseProjectSource("content/projects/empty-feature-item.md", projectSource({ features: ["Feature", "'   '"] })), /empty-feature-item\.md: features\[1\]: must not be empty/);
+  assert.throws(() => parseProjectSource("content/projects/stack-before-dedupe.md", projectSource({ stack: Array(31).fill("TypeScript") })), /stack-before-dedupe\.md: stack: must contain at most 30 items/);
+  assert.throws(() => parseProjectSource("content/projects/features-before-dedupe.md", projectSource({ features: Array(51).fill("Feature") })), /features-before-dedupe\.md: features: must contain at most 50 items/);
+});
+
+test("enforces the exact 1,000,000 UTF-8 byte content boundary", () => {
+  const asciiBoundary = "a".repeat(1_000_000);
+  const multibyteBoundary = "é".repeat(500_000);
+  assert.equal(parseProjectSource("content/projects/ascii-boundary.md", projectSource({}, asciiBoundary)).content, asciiBoundary);
+  assert.equal(parseProjectSource("content/projects/multibyte-boundary.md", projectSource({}, multibyteBoundary)).content, multibyteBoundary);
+  assert.throws(() => parseProjectSource("content/projects/ascii-overflow.md", projectSource({}, `${asciiBoundary}a`)), /ascii-overflow\.md: content: must be at most 1,000,000 UTF-8 bytes/);
+  assert.throws(() => parseProjectSource("content/projects/multibyte-overflow.md", projectSource({}, `${multibyteBoundary}a`)), /multibyte-overflow\.md: content: must be at most 1,000,000 UTF-8 bytes/);
+});
+
+test("preserves project content bytes and enforces standalone quoted dates", () => {
+  const body = "  first line\n\n    const value = 1;\nlast line\n\n";
+  assert.equal(parseProjectSource("content/projects/content-preserved.md", projectSource({}, body)).content, body);
+  assert.equal(parseProjectSource("content/projects/single-quoted-date.md", projectSource({ updatedAt: "'2026-07-13'" })).updatedAt, "2026-07-13");
+  assert.equal(parseProjectSource("content/projects/double-quoted-date.md", projectSource({ updatedAt: "\"2026-07-13\"" })).updatedAt, "2026-07-13");
+  for (const [file, value] of [
+    ["unquoted-comment.md", "2026-07-13 # date"],
+    ["single-quoted-comment.md", "'2026-07-13' # date"],
+    ["double-quoted-comment.md", "\"2026-07-13\" # date"],
+  ]) {
+    assert.throws(() => parseProjectSource(`content/projects/${file}`, projectSource({ updatedAt: value })), new RegExp(`${file}: updatedAt:`));
+  }
 });
 
 test("filters drafts before list, detail parameters, related projects, and sitemap", async () => {

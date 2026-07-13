@@ -8,7 +8,7 @@ const ALLOWED_FIELDS = new Set([
   "repository", "deployedUrl", "architecture", "timeline", "version", "license", "updatedAt",
 ]);
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const MAX_CONTENT_BYTES = 1024 * 1024;
+const MAX_CONTENT_BYTES = 1_000_000;
 
 function fail(filePath, field, message) {
   throw new Error(`[projects] ${filePath}: ${field}: ${message}`);
@@ -33,18 +33,19 @@ function requiredString(filePath, value, field, maxLength) {
 }
 
 function optionalString(filePath, value, field, maxLength) {
-  if (value === undefined) return undefined;
+  if (value === undefined || value === "") return undefined;
   return requiredString(filePath, value, field, maxLength);
 }
 
 function stringArray(filePath, value, field, maxItems, maxItemLength) {
   if (!Array.isArray(value)) fail(filePath, field, "must be an array");
   if (value.length > maxItems) fail(filePath, field, `must contain at most ${maxItems} items`);
-  return value.map((item, index) => requiredString(filePath, item, `${field}[${index}]`, maxItemLength));
+  const normalized = value.map((item, index) => requiredString(filePath, item, `${field}[${index}]`, maxItemLength));
+  return normalized.filter((item, index) => normalized.indexOf(item) === index);
 }
 
 function httpsUrl(filePath, value, field) {
-  if (value === undefined) return undefined;
+  if (value === undefined || value === "") return undefined;
   const normalized = requiredString(filePath, value, field, 2048);
   let parsed;
   try {
@@ -71,6 +72,10 @@ function timelineDateLiterals(matterSource) {
   return [...matterSource.matchAll(/^\s+(?:-\s*)?date:\s*(.*?)\s*$/gm)].map(match => unquoteDateLiteral(match[1]));
 }
 
+function frontmatterSource(source) {
+  return source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1] || "";
+}
+
 export function isValidProjectDate(date) {
   if (!DATE_PATTERN.test(date)) return false;
   const [year, month, day] = date.split("-").map(Number);
@@ -95,7 +100,7 @@ function architectureItems(filePath, value) {
     assertKnownFields(filePath, item, new Set(["label", "value"]), field);
     return {
       label: requiredString(filePath, item.label, `${field}.label`, 100),
-      value: requiredString(filePath, item.value, `${field}.value`, 1000),
+      value: requiredString(filePath, item.value, `${field}.value`, 500),
     };
   });
 }
@@ -123,6 +128,7 @@ export function parseProjectSource(filePath, source) {
   if (!FILENAME_PATTERN.test(filename)) fail(filePath, "filename", "must match ^[a-z0-9]+(?:-[a-z0-9]+)*\\.md$");
 
   const parsed = matter(source);
+  const matterSource = frontmatterSource(source);
   const data = parsed.data || {};
   if (!isPlainObject(data)) fail(filePath, "frontmatter", "must be an object");
   assertKnownFields(filePath, data, ALLOWED_FIELDS, "frontmatter");
@@ -131,12 +137,11 @@ export function parseProjectSource(filePath, source) {
   if (!PUBLICATION_STATUSES.has(data.publicationStatus)) fail(filePath, "publicationStatus", "must be draft or published");
   if (!LIFECYCLE_STATUSES.has(data.status)) fail(filePath, "status", "must be active, planned, in-progress, stable, or experimental");
 
-  if (new TextEncoder().encode(parsed.content).byteLength > MAX_CONTENT_BYTES) fail(filePath, "content", "must be at most 1MB");
-  const content = parsed.content.trim();
+  if (new TextEncoder().encode(parsed.content).byteLength > MAX_CONTENT_BYTES) fail(filePath, "content", "must be at most 1,000,000 UTF-8 bytes");
 
   const updatedAt = data.updatedAt === undefined
     ? undefined
-    : strictDate(filePath, topLevelDateLiteral(parsed.matter, "updatedAt"), "updatedAt");
+    : strictDate(filePath, topLevelDateLiteral(matterSource, "updatedAt"), "updatedAt");
 
   return {
     slug: filename.slice(0, -3),
@@ -153,11 +158,11 @@ export function parseProjectSource(filePath, source) {
     repository: httpsUrl(filePath, data.repository, "repository"),
     deployedUrl: httpsUrl(filePath, data.deployedUrl, "deployedUrl"),
     architecture: architectureItems(filePath, data.architecture),
-    timeline: timelineItems(filePath, data.timeline, parsed.matter),
+    timeline: timelineItems(filePath, data.timeline, matterSource),
     version: optionalString(filePath, data.version, "version", 100),
     license: optionalString(filePath, data.license, "license", 100),
     updatedAt,
-    content,
+    content: parsed.content,
   };
 }
 
