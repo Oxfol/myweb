@@ -1,7 +1,8 @@
 export function getProjectSections(project, hasRelatedContent = false) {
   return [
     { id: "overview", label: "Overview", visible: true },
-    { id: "features", label: "Features", visible: project.details.length > 0 },
+    { id: "content", label: "Details", visible: Boolean(project.content?.trim()) },
+    { id: "features", label: "Features", visible: project.features.length > 0 },
     { id: "architecture", label: "Architecture", visible: Boolean(project.architecture?.length) },
     { id: "tech-stack", label: "Tech Stack", visible: project.stack.length > 0 },
     { id: "timeline", label: "Timeline", visible: Boolean(project.timeline?.length) },
