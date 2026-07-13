@@ -68,8 +68,60 @@ function topLevelDateLiteral(matterSource, field) {
   return match ? unquoteDateLiteral(match[1]) : "";
 }
 
-function timelineDateLiterals(matterSource) {
-  return [...matterSource.matchAll(/^\s+(?:-\s*)?date:\s*(.*?)\s*$/gm)].map(match => unquoteDateLiteral(match[1]));
+function sequenceItemLine(line) {
+  const marker = line.match(/^( *)-/);
+  if (!marker) return undefined;
+  const remainder = line.slice(marker[0].length);
+  if (remainder && !/^\s/.test(remainder)) return undefined;
+  const spacing = remainder.match(/^\s*/)?.[0] || "";
+  return {
+    indent: marker[1].length,
+    content: remainder.slice(spacing.length),
+    contentIndent: marker[0].length + spacing.length,
+  };
+}
+
+function dateLiteralAtMappingLevel(line) {
+  const match = line.match(/^date:\s*(.*?)\s*$/);
+  return match ? unquoteDateLiteral(match[1]) : undefined;
+}
+
+export function extractTimelineDateLiterals(matterSource) {
+  const lines = matterSource.split(/\r?\n/);
+  const timelineStart = lines.findIndex(line => /^timeline:\s*(?:#.*)?$/.test(line));
+  if (timelineStart < 0) return [];
+
+  const block = [];
+  for (const line of lines.slice(timelineStart + 1)) {
+    if (line.trim() && !/^\s*#/.test(line) && !/^\s/.test(line)) break;
+    block.push(line);
+  }
+
+  const sequenceLines = block.map((line, index) => ({ index, item: sequenceItemLine(line) })).filter(entry => entry.item);
+  if (!sequenceLines.length) return [];
+  const itemIndent = Math.min(...sequenceLines.map(entry => entry.item.indent));
+  const itemStarts = sequenceLines.filter(entry => entry.item.indent === itemIndent);
+
+  return itemStarts.map((entry, itemIndex) => {
+    const end = itemStarts[itemIndex + 1]?.index ?? block.length;
+    const itemLines = block.slice(entry.index, end);
+    const first = entry.item;
+    const continuationIndents = itemLines.slice(1)
+      .filter(line => line.trim() && !/^\s*#/.test(line))
+      .map(line => line.match(/^ */)[0].length)
+      .filter(indent => indent > itemIndent);
+    const mappingIndent = first.content ? first.contentIndent : Math.min(...continuationIndents);
+    const dates = [];
+    const inlineDate = dateLiteralAtMappingLevel(first.content);
+    if (inlineDate !== undefined) dates.push(inlineDate);
+    for (const line of itemLines.slice(1)) {
+      const indent = line.match(/^ */)[0].length;
+      if (indent !== mappingIndent) continue;
+      const date = dateLiteralAtMappingLevel(line.slice(indent));
+      if (date !== undefined) dates.push(date);
+    }
+    return dates;
+  });
 }
 
 function frontmatterSource(source) {
@@ -109,14 +161,16 @@ function timelineItems(filePath, value, matterSource) {
   if (value === undefined) return undefined;
   if (!Array.isArray(value)) fail(filePath, "timeline", "must be an array");
   if (value.length > 50) fail(filePath, "timeline", "must contain at most 50 items");
-  const dates = timelineDateLiterals(matterSource);
-  if (dates.length !== value.length) fail(filePath, "timeline", "each item must contain one standalone date scalar");
+  const datesByItem = extractTimelineDateLiterals(matterSource);
+  if (datesByItem.length !== value.length) fail(filePath, "timeline", "must use a top-level block sequence with one mapping per item");
   return value.map((item, index) => {
     const field = `timeline[${index}]`;
     if (!isPlainObject(item)) fail(filePath, field, "must be an object");
     assertKnownFields(filePath, item, new Set(["date", "title", "description"]), field);
+    if (!Object.prototype.hasOwnProperty.call(item, "date")) fail(filePath, `${field}.date`, "is required");
+    if (datesByItem[index].length !== 1) fail(filePath, `${field}.date`, "must contain exactly one standalone scalar at the item mapping level");
     return {
-      date: strictDate(filePath, dates[index], `${field}.date`),
+      date: strictDate(filePath, datesByItem[index][0], `${field}.date`),
       title: requiredString(filePath, item.title, `${field}.title`, 200),
       description: requiredString(filePath, item.description, `${field}.description`, 1000),
     };

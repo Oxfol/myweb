@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
 import { calculateReadingTime, isValidCalendarDate, parseLogSource, sortPublishedLogs } from "../app/data/logs-core.js";
-import { isValidProjectDate, parseProjectCollection, parseProjectSource, publishedProjects } from "../app/data/projects-core.js";
+import { extractTimelineDateLiterals, isValidProjectDate, parseProjectCollection, parseProjectSource, publishedProjects } from "../app/data/projects-core.js";
 import { getProjectFacts, getProjectSections } from "../app/data/project-detail.js";
 import { buildSitemapEntries } from "../app/data/sitemap-core.js";
 import { legacyProjects } from "./fixtures/legacy-projects.mjs";
@@ -152,6 +152,25 @@ function projectSource(overrides = {}, body = "") {
   return `---\n${lines.join("\n")}\n---\n${body}`;
 }
 
+function timelineProjectSource({ timeline, currentPhase = "currentPhase: Validation", nextStep = "nextStep: Release", extra = "" }) {
+  return `---
+order: 1
+title: Timeline fixture
+description: Timeline fixture description
+publicationStatus: published
+status: active
+stack:
+  - TypeScript
+${currentPhase}
+${nextStep}
+features:
+  - Timeline parsing
+${extra}${extra ? "\n" : ""}timeline:
+${timeline}
+---
+`;
+}
+
 test("automatically discovers and losslessly migrates the six public projects", async () => {
   const source = await readFile(projectsSourceUrl, "utf8");
   assert.equal(projectFiles.length, 6);
@@ -274,6 +293,68 @@ test("preserves project content bytes and enforces standalone quoted dates", () 
   ]) {
     assert.throws(() => parseProjectSource(`content/projects/${file}`, projectSource({ updatedAt: value })), new RegExp(`${file}: updatedAt:`));
   }
+});
+
+test("scopes raw timeline dates to the top-level timeline sequence", () => {
+  const source = timelineProjectSource({
+    currentPhase: `currentPhase: |-
+  Planning
+  date: 2026-07-13`,
+    nextStep: `nextStep: |-
+  Release
+  date: 2026-07-13`,
+    extra: `architecture:
+  - label: Notes
+    value: |-
+      date: 2026-07-13`,
+    timeline: `  - date: 2026-07-14
+    title: Started
+    description: Initial work`,
+  });
+  const rawMatter = source.match(/^---\n([\s\S]*?)\n---/)?.[1];
+  assert.deepEqual(extractTimelineDateLiterals(rawMatter), [["2026-07-14"]]);
+  assert.deepEqual(parseProjectSource("content/projects/scoped-timeline.md", source).timeline.map(item => item.date), ["2026-07-14"]);
+});
+
+test("rejects a timeline item whose only date-looking text is inside description", () => {
+  const source = timelineProjectSource({
+    timeline: `  - title: Started
+    description: |
+      date: 2026-07-13`,
+  });
+  assert.throws(() => parseProjectSource("content/projects/missing-timeline-date.md", source), /missing-timeline-date\.md: timeline\[0\]\.date: is required/);
+});
+
+test("reads a real item-level date after date-looking description text", () => {
+  const source = timelineProjectSource({
+    timeline: `  - title: Started
+    description: |
+      date: 2026-07-12
+    date: 2026-07-14`,
+  });
+  assert.deepEqual(parseProjectSource("content/projects/date-after-description.md", source).timeline.map(item => item.date), ["2026-07-14"]);
+});
+
+test("keeps date-looking text isolated between timeline items", () => {
+  const source = timelineProjectSource({
+    timeline: `  - date: '2026-07-14'
+    title: Started
+    description: |
+      date: 2026-07-12
+  - title: Continued
+    description: Initial work
+    date: "2026-07-15"`,
+  });
+  assert.deepEqual(parseProjectSource("content/projects/two-timeline-items.md", source).timeline.map(item => item.date), ["2026-07-14", "2026-07-15"]);
+});
+
+test("rejects inline comments on timeline dates", () => {
+  const source = timelineProjectSource({
+    timeline: `  - date: 2026-07-14 # published
+    title: Started
+    description: Initial work`,
+  });
+  assert.throws(() => parseProjectSource("content/projects/commented-timeline-date.md", source), /commented-timeline-date\.md: timeline\[0\]\.date:/);
 });
 
 test("filters drafts before list, detail parameters, related projects, and sitemap", async () => {
