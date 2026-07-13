@@ -8,7 +8,7 @@ import { Container, TechBadge } from "../../components/SiteShell";
 import { getLog, logs } from "../../data/logs";
 
 export function generateStaticParams() { return logs.map(log => ({ slug: log.slug })); }
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) { const log = getLog((await params).slug); return { title: log?.title || "日志", description: log?.summary }; }
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) { const slug = (await params).slug; const log = getLog(slug); return { title: log?.title || "日志", description: log?.summary, alternates: { canonical: `/logs/${slug}` } }; }
 function getHeadings(content: string): ArticleHeading[] { const used = new Map<string, number>(); return content.split("\n").flatMap(line => { const match = line.match(/^(##|###)\s+(.+)$/); if (!match) return []; const label = match[2].trim(); const base = label.toLowerCase().replace(/[^\p{Letter}\p{Number}]+/gu, "-").replace(/^-|-$/g, "") || "section"; const count = used.get(base) || 0; used.set(base, count + 1); return [{ id: count ? `${base}-${count + 1}` : base, label, level: match[1] === "###" ? 3 : 2 } as ArticleHeading]; }); }
 
 export default async function LogDetail({ params }: { params: Promise<{ slug: string }> }) {

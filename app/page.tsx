@@ -8,6 +8,8 @@ import { SpotlightPanel } from "./components/SpotlightPanel";
 import { logs } from "./data/logs";
 import { projects } from "./data/projects";
 
+export const metadata = { alternates: { canonical: "/" } };
+
 export default function Home() {
   const project = projects[0];
   return (
